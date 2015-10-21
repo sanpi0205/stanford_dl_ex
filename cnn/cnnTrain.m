@@ -22,6 +22,7 @@ poolDim = 2;      % Pooling dimension, (should divide imageDim-filterDim+1)
 % Load MNIST Train
 addpath ../common/;
 addpath ../../data/MNIST/;
+
 images = loadMNISTImages('train-images-idx3-ubyte');
 images = reshape(images,imageDim,imageDim,[]);
 labels = loadMNISTLabels('train-labels-idx1-ubyte');

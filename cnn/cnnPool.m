@@ -30,20 +30,39 @@ pooledFeatures = zeros(convolvedDim / poolDim, ...
 %   Use mean pooling here.
 
 %%% YOUR CODE HERE %%%
-numRows = size(pooledFeatures,1);
-numCols = size(pooledFeatures,2);
 
-for i=1:numImages
-    for j=1:numFilters
+%% 向量方法
+pooled_total = poolDim^2;
+average_k = ones(poolDim)/pooled_total ;
+
+for imageNum = 1:numImages
+    for filterNum = 1:numFilters
+        current_image = squeeze(convolvedFeatures(:,:,filterNum,imageNum));
+        Img_conv = conv2(current_image, average_k, 'valid');
+        aux = downsample(Img_conv,poolDim);
+        aux1 = downsample(aux',poolDim);
+        aux1 = aux1';
         
-        for k = 1:numRows
-           for m=1:numCols
-              sub_feature = convolvedFeatures( poolDim*(k-1)+1:poolDim*k ,poolDim*(m-1)+1:poolDim*m ,j,i);
-              pooledFeatures(k,m,j,i) = mean2(sub_feature);
-           end
-        end
+        pooledFeatures(:,:,filterNum,imageNum) = aux1;
     end
 end
+
+
+%% 循环方法
+% numRows = size(pooledFeatures,1);
+% numCols = size(pooledFeatures,2);
+% 
+% for i=1:numImages
+%     for j=1:numFilters
+%         
+%         for k = 1:numRows
+%            for m=1:numCols
+%               sub_feature = convolvedFeatures( poolDim*(k-1)+1:poolDim*k ,poolDim*(m-1)+1:poolDim*m ,j,i);
+%               pooledFeatures(k,m,j,i) = mean2(sub_feature);
+%            end
+%         end
+%     end
+% end
              
 end
 

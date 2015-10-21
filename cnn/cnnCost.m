@@ -92,6 +92,17 @@ probs = zeros(numClasses,numImages);
 
 %%% YOUR CODE HERE %%%
 
+% 参考文献：https://github.com/PedroCV/UFLDL-Tutorial-Solutions/blob/master/Additional_3_Convolutional_Neural_Network/cnnCost.m
+% 计算 z
+z = Wd*activationsPooled + repmat(bd, 1, numImages);
+
+% 数据尺度处理，保证最终得到的概率值最大为1
+tmp = bsxfun(@minus, z, max(z, [], 1));
+% 计算a
+a = exp(tmp);
+probs = bsxfun(@rdivide, a, sum(a));
+
+clear tmp;
 
 %%======================================================================
 %% STEP 1b: Calculate Cost
@@ -103,7 +114,14 @@ cost = 0; % save objective into cost
 
 %%% YOUR CODE HERE %%%
 
+groundTruth = full(sparse(labels, 1:M, 1));
+aux4 = groundTruth.*probs;
+aux5 = log(aux4(aux4 ~= 0)); 
 
+cost = -mean(aux5);
+
+clear aux4;
+clear aux5;
 
 % Makes predictions given probs and returns without backproagating errors.
 if pred
@@ -125,6 +143,10 @@ end;
 
 %%% YOUR CODE HERE %%%
 
+
+
+
+
 %%======================================================================
 %% STEP 1d: Gradient Calculation
 %  After backpropagating the errors above, we can use them to calculate the
@@ -134,6 +156,11 @@ end;
 %  for that filter with each image and aggregate over images.
 
 %%% YOUR CODE HERE %%%
+
+
+
+
+
 
 %% Unroll gradient into grad vector for minFunc
 grad = [Wc_grad(:) ; Wd_grad(:) ; bc_grad(:) ; bd_grad(:)];

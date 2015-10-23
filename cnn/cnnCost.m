@@ -92,15 +92,15 @@ probs = zeros(numClasses,numImages);
 
 %%% YOUR CODE HERE %%%
 
-% 参考文献：https://github.com/PedroCV/UFLDL-Tutorial-Solutions/blob/master/Additional_3_Convolutional_Neural_Network/cnnCost.m
-% 计算 z
-z = Wd*activationsPooled + repmat(bd, 1, numImages);
+% reference：https://github.com/PedroCV/UFLDL-Tutorial-Solutions/blob/master/Additional_3_Convolutional_Neural_Network/cnnCost.m
+% calculate z_nl
+z_nl = Wd*activationsPooled + repmat(bd, 1, numImages);
 
-% 数据尺度处理，保证最终得到的概率值最大为1
-tmp = bsxfun(@minus, z, max(z, [], 1));
-% 计算a
-a = exp(tmp);
-probs = bsxfun(@rdivide, a, sum(a));
+% minus the max value of z_nl to make it less than 1
+tmp = bsxfun(@minus, z_nl, max(z_nl, [], 1));
+% calculate the a_nl value
+a_nl = exp(tmp);
+probs = bsxfun(@rdivide, a_nl, sum(a_nl));
 
 clear tmp;
 
@@ -114,11 +114,12 @@ cost = 0; % save objective into cost
 
 %%% YOUR CODE HERE %%%
 
+M = size(images,3);
 groundTruth = full(sparse(labels, 1:M, 1));
 aux4 = groundTruth.*probs;
 aux5 = log(aux4(aux4 ~= 0)); 
 
-cost = -mean(aux5);
+cost = -mean(aux5);  % have not include the weight decay
 
 clear aux4;
 clear aux5;
@@ -143,8 +144,14 @@ end;
 
 %%% YOUR CODE HERE %%%
 
+error_term_nl = (-1/M).*(groundTruth - probs);
+clear groundTruth;
 
-
+% not include the weight decay
+% activationsPooled is the a(l)
+Wd_grad = error_term_nl*activationsPooled'; 
+clear activationsPooled;
+bd_grad = error_term_nl*ones(M,1);
 
 
 %%======================================================================
@@ -157,8 +164,34 @@ end;
 
 %%% YOUR CODE HERE %%%
 
+% calculate the pooled error term
+error_term_pooled = Wd'*error_term_nl;
+error_term_pooled = reshape(error_term_pooled,outputDim,outputDim,numFilters,numImages);
+clear error_term_nl;
 
+% define the error term for convolution
+error_term_convolution = zeros(convDim,convDim,numFilters,numImages);
 
+for imageNum = 1:numImages
+    im = squeeze(images(:,:,imageNum));
+    for filterNum = 1:numFilters
+        
+        % the error term from pooled to convolution is been averaged by
+        % poolDim
+        error_term_pooled_to_convolution = (1/(poolDim^2)).*kron(squeeze(error_term_pooled(:,:,filterNum,imageNum)),ones(poolDim));
+        
+        % final error term is times by a*(1-a), also f'(z)
+        error_term_convolution(:,:,filterNum,imageNum) = error_term_pooled_to_convolution.*activations(:,:,filterNum,imageNum).*(1-activations(:,:,filterNum,imageNum));
+        
+        % calculate the delta and for a(1) is the input.
+        delta_1 = squeeze(error_term_convolution(:,:,filterNum,imageNum));
+        gradient_wc = conv2(im,rot90(squeeze(delta_1),2), 'valid');
+        
+        Wc_grad(:,:,filterNum) = squeeze(Wc_grad(:,:,filterNum)) + gradient_wc; 
+        bc_grad(filterNum) = bc_grad(filterNum) + sum(delta_1(:));
+        
+    end    
+end
 
 
 

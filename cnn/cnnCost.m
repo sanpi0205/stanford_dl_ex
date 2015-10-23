@@ -92,7 +92,7 @@ probs = zeros(numClasses,numImages);
 
 %%% YOUR CODE HERE %%%
 
-% reference£ºhttps://github.com/PedroCV/UFLDL-Tutorial-Solutions/blob/master/Additional_3_Convolutional_Neural_Network/cnnCost.m
+% reference: https://github.com/PedroCV/UFLDL-Tutorial-Solutions/blob/master/Additional_3_Convolutional_Neural_Network/cnnCost.m
 % calculate z_nl
 z_nl = Wd*activationsPooled + repmat(bd, 1, numImages);
 

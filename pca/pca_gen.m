@@ -5,8 +5,8 @@
 %  the raw image data from the kth 12x12 image patch sampled.
 %  You do not need to change the code below.
 
-addpath(genpath('../common'))
-x = loadMNISTImages('../common/train-images-idx3-ubyte');
+addpath(genpath('../common'));
+x = loadMNISTImages('../../data/MNIST/train-images-idx3-ubyte');
 figure('name','Raw images');
 randsel = randi(size(x,2),200,1); % A random selection of samples for visualization
 display_network(x(:,randsel));
@@ -16,6 +16,12 @@ display_network(x(:,randsel));
 %  You can make use of the mean and repmat/bsxfun functions.
 
 %%% YOUR CODE HERE %%%
+avg = mean(x, 1);
+x = x - repmat(avg, size(x, 1), 1);
+
+sigma =    x * x' / size(x, 2);
+
+[U, S, V] = svd(sigma);
 
 %%================================================================
 %% Step 1a: Implement PCA to obtain xRot
@@ -23,6 +29,8 @@ display_network(x(:,randsel));
 %  with respect to the eigenbasis of sigma, which is the matrix U.
 
 %%% YOUR CODE HERE %%%
+xRot = U' * x;
+
 
 %%================================================================
 %% Step 1b: Check your implementation of PCA
@@ -34,6 +42,7 @@ display_network(x(:,randsel));
 %  diagonal (non-zero entries) against a blue background (zero entries).
 
 %%% YOUR CODE HERE %%%
+covar = cov(xRot');
 
 % Visualise the covariance matrix. You should see a line across the
 % diagonal against a blue background.
@@ -46,6 +55,21 @@ imagesc(covar);
 %  to retain at least 99% of the variance.
 
 %%% YOUR CODE HERE %%%
+eigen_values = diag(S);
+eigen_values_ratio = eigen_values / sum(eigen_values);
+
+eigen_value_ratio_sum = 0;
+
+for k = 1:(size(eigen_values, 1))
+    eigen_value_ratio_sum = eigen_value_ratio_sum + eigen_values_ratio( k );
+    if( eigen_value_ratio_sum >= 0.99)
+        break;
+    end
+end
+
+xRot_cl = xRot;
+xRot_cl(k:end,:) = 0;
+    
 
 %%================================================================
 %% Step 3: Implement PCA with dimension reduction
@@ -62,6 +86,7 @@ imagesc(covar);
 %  correspond to dimensions with low variation.
 
 %%% YOUR CODE HERE %%%
+xHat = U*xRot_cl;
 
 % Visualise the data, and compare it to the raw data
 % You should observe that the raw and processed data are of comparable quality.
@@ -81,6 +106,10 @@ display_network(x(:,randsel));
 epsilon = 1e-1; 
 %%% YOUR CODE HERE %%%
 
+%  xPCAwhite = diag(1./sqrt(diag(S) + epsilon)) * U' * x;
+
+
+
 %% Step 4b: Check your implementation of PCA whitening 
 %  Check your implementation of PCA whitening with and without regularisation. 
 %  PCA whitening without regularisation results a covariance matrix 
@@ -97,6 +126,8 @@ epsilon = 1e-1;
 %  becoming smaller.
 
 %%% YOUR CODE HERE %%%
+
+
 
 % Visualise the covariance matrix. You should see a red line across the
 % diagonal against a blue background.
